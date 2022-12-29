@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">CFT.BINS</string>
+    <string name="title_get_info">GET INFO</string>
+    <string name="title_last_bins">LAST BINS</string>
+    <string name="title_scheme_network">SCHEME/NETWORK</string>
+    <string name="title_type">TYPE</string>
+    <string name="title_brand">BRAND</string>
+    <string name="title_prepaid">PREPAID</string>
+    <string name="title_card_number">CARD NUMBER</string>
+    <string name="title_card_length">LENGTH</string>
+    <string name="title_country">COUNTRY</string>
+    <string name="title_latitude">(latitude:</string>
+    <string name="title_longitude">, longitude:</string>
+    <string name="title_bin">BIN</string>
+</resources>
