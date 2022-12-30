@@ -11,9 +11,8 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
-        /*
         database = Room.databaseBuilder(this, DataBase::class.java, "database")
-            .build()*/
+            .build()
     }
 
     companion object {

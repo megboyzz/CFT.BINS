@@ -9,7 +9,8 @@
     <string name="title_card_number">CARD NUMBER</string>
     <string name="title_card_length">LENGTH</string>
     <string name="title_country">COUNTRY</string>
-    <string name="title_latitude">(latitude:</string>
-    <string name="title_longitude">, longitude:</string>
+    <string name="title_latitude">"(latitude: "</string>
+    <string name="title_longitude">", longitude: "</string>
     <string name="title_bin">BIN</string>
+    <string name="title_luhn">LUHN</string>
 </resources>

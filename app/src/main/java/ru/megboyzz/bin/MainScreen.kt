@@ -1,7 +1,7 @@
 package ru.megboyzz.bin
 
+import android.app.Application
 import android.util.Log
-import android.widget.ImageButton
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -11,6 +11,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -24,10 +26,10 @@ import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.substring
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.gson.Gson
 import ru.megboyzz.bin.entity.BINInfo
 import ru.megboyzz.bin.entity.BINInfoNumber
@@ -35,6 +37,8 @@ import ru.megboyzz.bin.ui.theme.main
 
 @Composable
 fun MainScreen(){
+
+    val context = LocalContext.current
 
     Column {
         Spacer(Modifier.height(25.dp))
@@ -75,6 +79,14 @@ fun MainScreen(){
                     textAlign = TextAlign.Center
                 )
                 Spacer(Modifier.height(10.dp))
+
+                val mViewModel: MainViewModel =
+                    viewModel(factory = MainViewModelFactory(context.applicationContext as App))
+
+                val binInfoList by mViewModel.binInfoNumberList.observeAsState()
+
+
+
             }
         }
 
@@ -119,7 +131,7 @@ fun maskFilter(text: AnnotatedString): TransformedText {
 
 
 @Composable
-fun yesNoLabel(isYes: Boolean){
+fun YesNoLabel(isYes: Boolean){
     LeftRightTextLabel(left = "Yes", right = "No", isLeft = isYes)
 }
 
@@ -154,7 +166,7 @@ fun TitledPosition(
     content: @Composable (() -> Unit)
 ){
     val style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Thin)
-    Column {
+    Column(Modifier.height(90.dp)) {
         Text(text = title, style = style)
         Spacer(modifier = Modifier.height(14.dp))
         content()
@@ -162,10 +174,38 @@ fun TitledPosition(
 
 }
 
+@Composable
+fun LatitudeAndLongitude(latitude: Int, longitude:Int){
+    val styleText = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Thin)
+    val styleNumber = TextStyle(fontSize = 12.sp)
+    Row{
+        Text(text = R.string.title_latitude.AsString(), style = styleText)
+        Text(text = latitude.toString(), style = styleNumber)
+        Text(text = R.string.title_longitude.AsString(), style = styleText)
+        Text(text = longitude.toString(), style = styleNumber)
+        Text(text = ")", style = styleText)
+    }
+}
+
+@Preview
+@Composable
+fun land() {
+    LatitudeAndLongitude(latitude = 56, longitude = 10)
+}
+
 
 @Composable
 fun BinCard(binInfo: BINInfoNumber){
-    var context = LocalContext.current;
+
+    val context = LocalContext.current
+
+    val expanded = remember { mutableStateOf(false) }
+    val arrow = remember { mutableStateOf(R.drawable.arrow_down) }
+
+    val app = context as App
+
+    val binInfoDao = app.database?.binInfoDao()
+
     Card(
         shape = RoundedCornerShape(10.dp),
         border = BorderStroke(1.dp, main),
@@ -175,16 +215,20 @@ fun BinCard(binInfo: BINInfoNumber){
             Column(
                 verticalArrangement = Arrangement.Center,
             ) {
+                if(expanded.value) arrow.value = R.drawable.arrow_up
+                else arrow.value = R.drawable.arrow_down
                 Row(
                     horizontalArrangement = Arrangement.SpaceAround,
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(10.dp, 20.dp, 10.dp, 20.dp).fillMaxWidth()
+                    modifier = Modifier
+                        .padding(10.dp, 20.dp, 10.dp, 20.dp)
+                        .fillMaxWidth()
                 ) {
                     Image(
                         painter = R.drawable.remove.AsPainter(),
                         contentDescription = "remove",
                         modifier = Modifier.clickable {
-                            Toast.makeText(context, "remove", Toast.LENGTH_LONG).show();
+                            binInfoDao?.removeBinInfo(binInfo)
                         }
                     )
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -193,12 +237,71 @@ fun BinCard(binInfo: BINInfoNumber){
                         Text(text = "${number.substring(0,4)} ${number.substring(4,8)}")
                     }
                     Image(
-                        painter = R.drawable.arrow_down.AsPainter(),
-                        contentDescription = "arrow_down",
+                        painter = arrow.value.AsPainter(),
+                        contentDescription = "arrow",
                         modifier = Modifier.clickable {
-                            Toast.makeText(context, "expand", Toast.LENGTH_LONG).show();
+                            expanded.value = !expanded.value
                         }
                     )
+                }
+                if(expanded.value){
+                    Image(
+                        painter = R.drawable.incard_line.AsPainter(),
+                        contentDescription = "line",
+                        alignment = Alignment.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(0.dp, 20.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ){
+                        Column(
+                            verticalArrangement = Arrangement.SpaceBetween,
+                            //modifier = Modifier.fillMaxHeight()
+                        ) {
+                            TitledPosition(title = R.string.title_scheme_network.AsString()) {
+                                Text(text = binInfo.info.scheme.uppercase(),)
+                            }
+                            TitledPosition(title = R.string.title_brand.AsString()) {
+                                Text(text = binInfo.info.brand.uppercase())
+                            }
+                            TitledPosition(title = R.string.title_card_number.AsString()) {
+                                Row{
+                                    TitledPosition(title = R.string.title_card_length.AsString()) {
+                                        Text(text = binInfo.info.number.length.toString())
+                                    }
+                                    Spacer(Modifier.width(20.dp))
+                                    TitledPosition(title = R.string.title_luhn.AsString()) {
+                                        YesNoLabel(isYes = binInfo.info.number.luhn)
+                                    }
+                                }
+                            }
+                        }
+                        Column(
+                            verticalArrangement = Arrangement.SpaceBetween,
+                            //modifier = Modifier.fillMaxHeight()
+                        ) {
+                            TitledPosition(title = R.string.title_type.AsString()) {
+                                val type = binInfo.info.type
+                                LeftRightTextLabel(
+                                    left = "Debit",
+                                    right = "Credit",
+                                    isLeft = type == "debit"
+                                )
+                            }
+                            TitledPosition(title = R.string.title_prepaid.AsString()) {
+                                YesNoLabel(isYes = binInfo.info.prepaid)
+                            }
+                            TitledPosition(title = R.string.title_country.AsString()) {
+                                Text(text = "${binInfo.info.country.emoji} ${binInfo.info.country.name}")
+                                LatitudeAndLongitude(latitude = binInfo.info.country.latitude, longitude = binInfo.info.country.longitude)
+                            }
+                        }
+                    }
+
                 }
             }
         }
@@ -234,9 +337,9 @@ fun TitleWithContent() {
                 TitledPosition(title = "LENGTH") {
                     Text(text = "16")
                 }
-                Spacer(Modifier.width(20.dp))
+                //Spacer(Modifier.width(20.dp))
                 TitledPosition(title = "LUHN") {
-                    yesNoLabel(isYes = true)
+                    YesNoLabel(isYes = true)
                 }
             }
         }
@@ -247,7 +350,7 @@ fun TitleWithContent() {
 @Composable
 fun prevYesNo() {
     Column() {
-        yesNoLabel(isYes = true)
+        YesNoLabel(isYes = true)
         LeftRightTextLabel(left = "Debit", right = "Credit", isLeft = true)
     }
 }
