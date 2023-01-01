@@ -13,4 +13,8 @@
     <string name="title_longitude">", longitude: "</string>
     <string name="title_bin">BIN</string>
     <string name="title_luhn">LUHN</string>
+    <string name="title_no_info">"no info for "</string>
+    <string name="title_bank">BANK</string>
+    <string name="title_currency">CURRENCY</string>
+    <string name="title_numeric">NUMERIC</string>
 </resources>

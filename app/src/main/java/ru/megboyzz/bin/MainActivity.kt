@@ -28,28 +28,6 @@ fun Int.AsPainter() = painterResource(this)
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        val retrofit = Retrofit.Builder()
-            .baseUrl("https://lookup.binlist.net/")
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-
-        val create = retrofit.create(APIService::class.java)
-
-        val callback = object : Callback<BINInfo> {
-            override fun onResponse(call: Call<BINInfo>, response: Response<BINInfo>) {
-                val body = response.body()
-                Log.d("Main", response.toString())
-            }
-
-            override fun onFailure(call: Call<BINInfo>, t: Throwable) {
-                t.printStackTrace()
-            }
-
-        }
-
-        create.getData(45717360).enqueue(callback)
-
         setContent {
             MainTheme {
                 Scaffold(

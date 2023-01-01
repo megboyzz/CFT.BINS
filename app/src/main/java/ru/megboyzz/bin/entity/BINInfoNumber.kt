@@ -10,7 +10,7 @@ import ru.megboyzz.bin.converter.BINConverter
 @TypeConverters(BINConverter::class)
 data class BINInfoNumber(
     @PrimaryKey(autoGenerate = true)
-    val id: Long,
+    val id: Long = 0,
     val number: Int,
     val info: BINInfo //TODO Сделать typeConverter
 )
