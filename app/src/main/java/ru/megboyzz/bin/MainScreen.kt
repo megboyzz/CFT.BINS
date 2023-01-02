@@ -2,6 +2,7 @@ package ru.megboyzz.bin
 
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -205,7 +206,7 @@ fun TitledPosition(
     val style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Thin)
     Column(
         Modifier
-            .height(100.dp)
+            //.height(100.dp)
             .clickable(
                 enabled = onPositionClick != defaultLambda,
                 onClick = onPositionClick
@@ -263,7 +264,10 @@ fun BinCard(binInfo: BINInfoNumber, viewModel: MainViewModel){
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     BankName(info = binInfo.info)
                     val number = binInfo.number.toString()
-                    Text(text = "${number.substring(0,4)} ${number.substring(4,8)}")
+                    if(number.length == 8)
+                        Text(text = "${number.substring(0,4)} ${number.substring(4,8)}")
+                    else
+                        Text(text = number)
                 }
                 Image(
                     painter = arrow.value.AsPainter(),
@@ -291,7 +295,7 @@ fun BinCard(binInfo: BINInfoNumber, viewModel: MainViewModel){
                     horizontalArrangement = Arrangement.spacedBy(20.dp)
                 ){
                     Column(
-                        verticalArrangement = Arrangement.SpaceBetween,
+                        verticalArrangement = Arrangement.spacedBy(30.dp),
                     ) {
                         val scheme = info.scheme ?: "?"
                         TitledPosition(title = R.string.title_scheme_network.AsString()) {
@@ -336,30 +340,34 @@ fun BinCard(binInfo: BINInfoNumber, viewModel: MainViewModel){
                         ) {
                             BankName(info = info)
                             val uriHandler = LocalUriHandler.current
-                            val url = info.bank.url
-                            if(url != null)
-                                ClickableText(
-                                    text = getStyledAnnotatedString(url, url),
-                                    onClick = {
-                                        uriHandler.openUri("https://$url")
-                                    }
-                                )
-                            else nullTextLabel()
-
-                            val phone = info.bank.phone
-                            if(phone != null)
-                                ClickableText(text = getStyledAnnotatedString(phone, phone), onClick = {
-                                    val intent = Intent(
-                                        Intent.ACTION_DIAL,
-                                        Uri.parse("tel:$phone")
+                            if(info.bank != null) {
+                                val url = info.bank.url
+                                if (url != null)
+                                    ClickableText(
+                                        text = getStyledAnnotatedString(url, url),
+                                        onClick = {
+                                            uriHandler.openUri("https://$url")
+                                        }
                                     )
-                                    context.startActivity(intent)
-                                })
-                            else nullTextLabel()
+                                else nullTextLabel()
+                            }else nullTextLabel()
+
+                            if(info.bank != null) {
+                                val phone = info.bank.phone
+                                if(phone != null)
+                                    ClickableText(text = getStyledAnnotatedString(phone, phone), onClick = {
+                                        val intent = Intent(
+                                            Intent.ACTION_DIAL,
+                                            Uri.parse("tel:$phone")
+                                        )
+                                        context.startActivity(intent)
+                                    })
+                                else nullTextLabel()
+                            }else nullTextLabel()
                         }
                     }
                     Column(
-                        verticalArrangement = Arrangement.SpaceBetween,
+                        verticalArrangement = Arrangement.spacedBy(30.dp),
                     ) {
                         TitledPosition(title = R.string.title_type.AsString()) {
                             val type = info.type
@@ -385,13 +393,17 @@ fun BinCard(binInfo: BINInfoNumber, viewModel: MainViewModel){
                             }
                         ) {
                             val country = info.country
-                            val emoji = country.emoji ?: "?"
+                            if(country != null) {
 
+                                val emoji = country.emoji ?: "?"
 
-
-                            Text(text = "$emoji ${info.country.name}")
-                            Spacer(Modifier.height(10.dp))
-                            LatitudeAndLongitude(latitude = info.country.latitude, longitude = info.country.longitude)
+                                Text(text = "$emoji ${info.country.name}")
+                                Spacer(Modifier.height(10.dp))
+                                LatitudeAndLongitude(
+                                    latitude = info.country.latitude,
+                                    longitude = info.country.longitude
+                                )
+                            }else nullTextLabel()
                         }
 
                         TitledPosition(title = R.string.title_currency.AsString()) {
@@ -449,15 +461,24 @@ fun nullTextLabel() = Text(text = "?")
 @Composable
 fun BankName(info: BINInfo){
 
-    val bankName = getBankName(info)
+    var bankName = getBankName(info)
     if(bankName == "?")
         nullTextLabel()
-    else
+    else {
+        if(bankName.length > 12) {
+            var prc = bankName.substring(12, bankName.length)
+            if(prc.length > 12){
+                prc = prc.substring(0, 12) + "\n" + prc.substring(12, prc.length)
+            }
+            bankName = bankName.substring(0, 12) + "\n" + prc
+        }
         Text(bankName)
+    }
 }
 
 
 fun getBankName(info: BINInfo): String{
+    if(info.bank == null) return "?"
     var name = info.bank.name
     if(name == null) name = "?"
 
@@ -469,5 +490,3 @@ fun getBankName(info: BINInfo): String{
     else
         "$name, $city"
 }
-
-
